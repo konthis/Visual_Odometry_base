@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iostream>
 #include <vector>
+
 #include <opencv2/opencv.hpp>
 
 namespace fs = std::filesystem;
@@ -42,14 +43,16 @@ int test_feat_detect(){
     // cv::imshow("SKRT",img);
     // if(cv::waitKey(0)==27) {return 0;}
 
-    std::vector<KeyPoint> feat_points;
+    std::vector<Point2f> feat_points;
     feature_detection(img,feat_points);
-    cv::Mat img_keypoints;
-    drawKeypoints(img, feat_points, img_keypoints, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    cv::Mat img_keypoints = img;
+    // drawKeypoints(img, feat_points, img_keypoints, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    drawPoints(img_keypoints,feat_points);
 
-    cv::Mat both; cv::vconcat(img, img_keypoints,both);
+
+    // cv::Mat both; cv::vconcat(img, img_keypoints,both);
  
-    cv::imshow("SKRT",both);
+    cv::imshow("SKRT",img_keypoints);
 
     if(cv::waitKey(0)==27) {return 0;}
     
@@ -57,7 +60,76 @@ int test_feat_detect(){
     return 0;
 }
 
+int test_calib(){
+    fs::path calib_p = (std::string)SOURCE_DATASET_FOLDER + "00/";
+    cv::Mat img;
+    Point2d p;
+    double focal;
+    get_calib_data(calib_p,focal,p);
+    return 0;
+}
+
+int test_track(){
+    fs::path img_path = (std::string)SOURCE_DATASET_FOLDER + "00/image_0/000007.png";
+    cv::Mat img1, img2;
+    load_img(img_path,img1);
+    img_path = (std::string)SOURCE_DATASET_FOLDER + "00/image_0/000008.png";
+    load_img(img_path,img2);
+
+    std::vector<Point2f> points1,points2;
+    feature_detection(img1,points1);
+    std::vector<uchar> status;
+    feature_tracking(img1,img2,points1,points2,status);
+
+    cv::Mat img_keypoints1 = img1,img_keypoints2=img2;
+    drawPoints(img_keypoints1, points1);
+    drawPoints(img_keypoints2, points2);
+
+
+    cv::Mat both; cv::vconcat(img_keypoints1, img_keypoints2,both);
+ 
+    cv::imshow("SKRT",both);
+
+    std::cout << points1.size() << "\n";
+    std::cout << points2.size() << "\n";
+    if(cv::waitKey(0)==27) {return 0;}
+}
+
+int test_track_loop(){ 
+    std::string sequence    = "00";
+    std::string imagen      = "image_0";
+    
+    std::vector<fs::path> fnames = get_filenames(fs::path((std::string)SOURCE_DATASET_FOLDER + sequence +"/"+ imagen));
+    fs::path img_path = fnames.at(0);
+    cv::Mat img1, img2;
+    
+    load_img(img_path,img1);
+    for(int i=1; i<fnames.size(); i++){
+        img_path = fnames.at(i);
+        load_img(img_path,img2);
+        std::vector<Point2f> points1,points2;
+        feature_detection(img1,points1);
+        std::vector<uchar> status;
+        feature_tracking(img1,img2,points1,points2,status);
+
+        cv::Mat img_keypoints1 = img1,img_keypoints2=img2;
+        drawPoints(img_keypoints1, points1);
+        drawPoints(img_keypoints2, points2);
+
+
+        cv::Mat both; cv::vconcat(img_keypoints1, img_keypoints2,both);
+ 
+        cv::imshow("SKRT",both);
+
+        std::cout << points1.size() - points2.size() << "\n";
+        if(cv::waitKey(0)==27) {return 0;}
+        img1 = img2;
+    }
+
+
+}
+
 int main(int argc, char** argv){
 
-    return test_feat_detect();
+    return test_track_loop();
 }
