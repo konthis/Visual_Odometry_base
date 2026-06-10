@@ -11,14 +11,15 @@
 using namespace cv;
 namespace fs = std::filesystem;
 
-void get_calib_data(fs::path dataset_path, double &focal, Point2d &p);
+void get_calib_data(const fs::path dataset_path, double &focal, Point2d &p);
 void feature_detection(Mat img, std::vector<Point2f> &feat_points);
-void feature_tracking(Mat img_1, Mat img_2, std::vector<Point2f> &points1, std::vector<Point2f> &points2, std::vector<uchar> &status);
+void feature_tracking(Mat img1, Mat img2, std::vector<Point2f> &points1, std::vector<Point2f> &points2, std::vector<uchar> &status);
+double getAbsoluteScale(const fs::path pose_path, int frameIdx);
 
 class VisualOdometry{
     public:
     VisualOdometry() = default;
-    int run(const fs::path dataset_path);
+    int run(const fs::path dataset_path, const std::string sequence);
 };
 
 

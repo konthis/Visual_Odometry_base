@@ -8,7 +8,7 @@
 
 namespace fs = std::filesystem;
 
-#define SOURCE_DATASET_FOLDER "/mnt/e/Datasets/KITTI/dataset/sequences/"
+#define SOURCE_DATASET_FOLDER "/mnt/e/Datasets/KITTI/dataset/"
 
 void print_mat(const cv::Mat &m){
     std::cout << "m = " << "\n" << m << "\n";
@@ -95,41 +95,11 @@ int test_track(){
     if(cv::waitKey(0)==27) {return 0;}
 }
 
-int test_track_loop(){ 
-    std::string sequence    = "00";
-    std::string imagen      = "image_0";
-    
-    std::vector<fs::path> fnames = get_filenames(fs::path((std::string)SOURCE_DATASET_FOLDER + sequence +"/"+ imagen));
-    fs::path img_path = fnames.at(0);
-    cv::Mat img1, img2;
-    
-    load_img(img_path,img1);
-    for(int i=1; i<fnames.size(); i++){
-        img_path = fnames.at(i);
-        load_img(img_path,img2);
-        std::vector<Point2f> points1,points2;
-        feature_detection(img1,points1);
-        std::vector<uchar> status;
-        feature_tracking(img1,img2,points1,points2,status);
-
-        cv::Mat img_keypoints1 = img1,img_keypoints2=img2;
-        drawPoints(img_keypoints1, points1);
-        drawPoints(img_keypoints2, points2);
-
-
-        cv::Mat both; cv::vconcat(img_keypoints1, img_keypoints2,both);
- 
-        cv::imshow("SKRT",both);
-
-        std::cout << points1.size() - points2.size() << "\n";
-        if(cv::waitKey(0)==27) {return 0;}
-        img1 = img2;
-    }
-
-
-}
-
 int main(int argc, char** argv){
+    std::string sequence    = "00";
+    fs::path dataset_path = SOURCE_DATASET_FOLDER;
 
-    return test_track_loop();
+    VisualOdometry vo;
+    vo.run(dataset_path, sequence);
+    return 0;
 }
